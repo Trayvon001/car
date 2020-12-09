@@ -21,7 +21,6 @@
 oled的基础知识
 我们采用的字符是8*6大小，即一个字符占8行 6列的空间
 OLED一共有64行，但是由于显示一个字符占用8行，所以实际有8行空间可以显示
-DASDASDASD
 *************/
 #include "include.h"
 #include "common.h"
@@ -35,7 +34,7 @@ void LOAD(void);//整个道路情况
 
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
-int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
+int sever_range=13;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
 int sever_duty=0;//舵机占空比变化值
 /**驱动电机相关QAQ**/
 float motor1_out,motor2_out;
@@ -48,7 +47,7 @@ int16 Value1_SystemError=0;
 int16 Value2_SystemError=35;
 int error_stack[100];
 unsigned char current_error=0;
-unsigned char error_delay=0;
+unsigned char error_delay=10;
 
 /**道路相关**/
 #define load0_straight 0//直线
@@ -73,11 +72,11 @@ void  main(void)
   OLED_P6x8Str(0,0,"DaJaV"); //第0行第0列开始显示
   OLED_P6x8Str(5*6,0,"QAQ"); //第0行第30列开始显示
 
-  OLED_P6x8Str(20,3,"Current_Road=");
-  OLED_P6x8Str(20,4,"motor_duty=");
-  OLED_P6x8Str(20,5,"sever_duty=");
-  OLED_P6x8Str(20,6,"Value1=");
-  OLED_P6x8Str(20,7,"Value2=");
+  OLED_P6x8Str(20,4,"Current_Road=");
+  OLED_P6x8Str(20,5,"motor_duty=");
+  OLED_P6x8Str(20,6,"sever_duty=");
+
+
   EnableInterrupts; //打开中断 
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
@@ -101,20 +100,15 @@ void  main(void)
       FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 
     sprintf(buff,"%d",current_load_state);  //将读数Value1转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+78,3,buff); //将数值显示在液晶屏幕上 13*6
+    OLED_P6x8Str(20+78,4,buff); //将数值显示在液晶屏幕上 13*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
     sprintf(buff,"%d",motor_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+66,4,buff); //将数值显示在液晶屏幕上11*6
-    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    sprintf(buff,"%d",sever_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,5,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    sprintf(buff,"%d",Value1);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    sprintf(buff,"%d",sever_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
-    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+
       DELAY_MS(90); //延时90ms
     }
     
@@ -203,11 +197,11 @@ void PIT_IRQHandler()  //10ms一次中断
       Value1_cal[i]=Value1;
       Value2_cal[i]=Value2;
       i++;
-     }
+      }
     }
    else
    {
-     error_stack[(current_error+error_delay)%100] =-((Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5);
+     error_stack[(current_error+error_delay)%100] =(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;
      i=0;
    }
 
@@ -228,6 +222,7 @@ case load0_straight:
     {
     sever_duty= sever_PID(error_stack[current_error]);
     }*/
+
     sever_duty= sever_PID(error_stack[current_error]);
     current_error=(current_error+1)%100;
 break;
