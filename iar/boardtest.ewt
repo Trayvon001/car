@@ -199,6 +199,9 @@
     <file>
       <name>$PROJ_DIR$\..\Driver\oled12864.h</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\Driver\pid.c</name>
+    </file>
   </group>
   <group>
     <name>lib</name>

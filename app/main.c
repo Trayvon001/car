@@ -73,11 +73,11 @@ void  main(void)
   OLED_P6x8Str(0,0,"DaJaV"); //第0行第0列开始显示
   OLED_P6x8Str(5*6,0,"QAQ"); //第0行第30列开始显示
 
-  OLED_P6x8Str(20,4,"Current_Road=");
-  OLED_P6x8Str(20,5,"motor_duty=");
-  OLED_P6x8Str(20,6,"sever_duty=");
-
-
+  OLED_P6x8Str(20,3,"Current_Road=");
+  OLED_P6x8Str(20,4,"motor_duty=");
+  OLED_P6x8Str(20,5,"sever_duty=");
+  OLED_P6x8Str(20,6,"Value1=");
+  OLED_P6x8Str(20,7,"Value2=");
   EnableInterrupts; //打开中断 
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
@@ -101,15 +101,20 @@ void  main(void)
       FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 
     sprintf(buff,"%d",current_load_state);  //将读数Value1转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+78,4,buff); //将数值显示在液晶屏幕上 13*6
+    OLED_P6x8Str(20+78,3,buff); //将数值显示在液晶屏幕上 13*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
     sprintf(buff,"%d",motor_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+66,5,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Str(20+66,4,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
     sprintf(buff,"%d",sever_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,5,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+    sprintf(buff,"%d",Value1);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-
+    sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
       DELAY_MS(90); //延时90ms
     }
     
@@ -192,17 +197,17 @@ void PIT_IRQHandler()  //10ms一次中断
     {
       Value1=adc_once(ADC0_DP1,ADC_12bit)-Value1_SystemError;  //获取电感模块的读数
       Value2=adc_once(ADC0_DM1,ADC_12bit)-Value2_SystemError;
-      if(Value1+Value2<200) current_load_state=stop;//确保安全
-      else
-      {
+      //if(Value1+Value2<200) current_load_state=stop;//确保安全
+      //else
+      //{
       Value1_cal[i]=Value1;
       Value2_cal[i]=Value2;
       i++;
-      }
+     // }
     }
    else
    {
-     error_stack[(current_error+error_delay)%100] =(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;
+     error_stack[(current_error+error_delay)%100] =-(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;
      i=0;
    }
 
@@ -217,7 +222,7 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-    motor_duty=10;
+    motor_duty=20;
     /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
     else
     {

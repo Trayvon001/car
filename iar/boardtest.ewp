@@ -1040,7 +1040,7 @@
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>7.30.4.8186</state>
+          <state>7.30.3.8061</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -1935,6 +1935,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\Driver\oled12864.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Driver\pid.c</name>
     </file>
   </group>
   <group>

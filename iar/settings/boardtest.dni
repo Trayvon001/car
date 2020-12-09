@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=602121501
+Checksum=611687904
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -85,6 +85,10 @@ GraphEnabled=0
 ShowTimeLog=1
 ShowTimeSum=1
 SumSortOrder=0
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Count=0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -92,6 +96,10 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+A0=_ "C:\Users\Lenovo\Desktop\DN_FX_EXAMPLES\Project\0_整体测试\Lib\Chip\src\IAR\system_MK60DZ10.c" ""
+Count=1
+SuppressDialog=1
 [CallStackLog]
 Enabled=0
 [PowerProbe]
@@ -104,11 +112,3 @@ Mode=1
 Graph=0
 Symbiont=0
 Exclusions=
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Count=0
-[Aliases]
-A0=_ "C:\Users\Lenovo\Desktop\DN_FX_EXAMPLES\Project\0_整体测试\Lib\Chip\src\IAR\system_MK60DZ10.c" ""
-Count=1
-SuppressDialog=1

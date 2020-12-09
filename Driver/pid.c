@@ -3,7 +3,7 @@
 
 #include "include.h"
 #include "common.h"
-float sever_KP=8/1000.0 ;
+float sever_KP=15/1000.0 ;
 float sever_KI=0.0/1000 ;
 float sever_KD=0.3/1000;
 
