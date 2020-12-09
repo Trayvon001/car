@@ -7,9 +7,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="091a8c2d-d87f-43fe-b54b-0a4178c473d5" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Driver/pid.c" beforeDir="false" afterPath="$PROJECT_DIR$/Driver/pid.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Driver/pid.h" beforeDir="false" afterPath="$PROJECT_DIR$/Driver/pid.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/MK60_conf.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/MK60_conf.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/MK60_conf.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/MK60_conf.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd.browse" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd.browse" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/led.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/led.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/led.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/led.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/oled12864.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/oled12864.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/oled12864.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/oled12864.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/pid.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/pid.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/pid.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/pid.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/boardtest.dep" beforeDir="false" afterPath="$PROJECT_DIR$/iar/boardtest.dep" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.K60DN_Debug.cspy.bat" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.K60DN_Debug.cspy.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.dni" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.dni" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.wsdt" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.wsdt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +63,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1607495973482</updated>
-      <workItem from="1607495975825" duration="6032000" />
+      <workItem from="1607495975825" duration="6677000" />
+      <workItem from="1607507877355" duration="788000" />
     </task>
     <task id="LOCAL-00001" summary="上传程序">
       <created>1607496008743</created>
@@ -66,7 +87,14 @@
       <option name="project" value="LOCAL" />
       <updated>1607502227617</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="增加直道函数">
+      <created>1607503442265</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1607503442265</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -76,6 +104,7 @@
     <MESSAGE value="上传程序" />
     <MESSAGE value="完善" />
     <MESSAGE value="上传" />
-    <option name="LAST_COMMIT_MESSAGE" value="上传" />
+    <MESSAGE value="增加直道函数" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加直道函数" />
   </component>
 </project>

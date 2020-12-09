@@ -85,6 +85,7 @@ void  main(void)
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
+
        if(BT_YES_IN==0)//BT1 重启按钮
        {
           DELAY_MS(10); //延时10ms 消抖
@@ -105,7 +106,6 @@ void  main(void)
       motor1_out=(motor_duty-motor_duty_error)*0.01; //转化为实际占空比
       motor2_out=(motor_duty+motor_duty_error)*0.01;  
       Motor_Out();//驱动电机控制输出
-
       sever_duty=sever_duty_Limit(sever_duty);
       FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 
@@ -231,11 +231,10 @@ void PIT_IRQHandler()  //10ms一次中断
 void LOAD(void)
 {
 
-
-
 switch(current_load_state)
 {
 case load0_straight:
+
     motor_duty=30;//轮子基本转速 
     sever_duty=0;//保持舵向不动
     if (ABS(error_stack[current_error]) >= 200){//放弃舵机pid 采用轮子差速来进行转向调节
@@ -266,7 +265,16 @@ case load6_curve:
 
 break;
 case load7_straight:
-
+    motor_duty=30;
+    if (ABS(error_stack[current_error]) >= 200){
+        sever_duty = sever_PID(error_stack[current_error],8/1000.0,0/1000,1.0/1000.0);
+    }
+    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
+    else
+    {
+    sever_duty= sever_PID(error_stack[current_error]);
+    }*/
+    current_error=(current_error+1)%100;
 break;
 case stop:
 motor_duty=0;
