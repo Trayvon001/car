@@ -81,21 +81,11 @@ void  main(void)
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
- 
-
-
-
       LOAD();
-
-
-
-
-
       motor_duty=motor_duty_Limit(motor_duty);
       motor1_out=motor_duty*0.01; //转化为实际占空比
       motor2_out=motor_duty*0.01;  
       Motor_Out();//驱动电机控制输出
-
       sever_duty=sever_duty_Limit(sever_duty);
       FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 
@@ -211,14 +201,12 @@ void PIT_IRQHandler()  //10ms一次中断
 void LOAD(void)
 {
 
-
-
 switch(current_load_state)
 {
 case load0_straight:
     motor_duty=30;
     if (ABS(error_stack[current_error]) >= 200){
-        sever_duty = sever_PID(error_stack[current_error],10/1000.0,0/1000,1.0/1000.0);
+        sever_duty = sever_PID(error_stack[current_error],8/1000.0,0/1000,1.0/1000.0);
     }
     /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
     else
@@ -248,7 +236,16 @@ case load6_curve:
 
 break;
 case load7_straight:
-
+    motor_duty=30;
+    if (ABS(error_stack[current_error]) >= 200){
+        sever_duty = sever_PID(error_stack[current_error],8/1000.0,0/1000,1.0/1000.0);
+    }
+    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
+    else
+    {
+    sever_duty= sever_PID(error_stack[current_error]);
+    }*/
+    current_error=(current_error+1)%100;
 break;
 case stop:
 motor_duty=0;
