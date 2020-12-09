@@ -191,7 +191,7 @@ void PIT_IRQHandler()  //10ms一次中断
     {
       Value1=adc_once(ADC0_DP1,ADC_12bit)-Value1_SystemError;  //获取电感模块的读数
       Value2=adc_once(ADC0_DM1,ADC_12bit)-Value2_SystemError;
-      if(Value1+Value2<???) current_load_state=stop;//确保安全
+      if(Value1+Value2<200) current_load_state=stop;//确保安全
       else
       {
       Value1_cal[i]=Value1;
