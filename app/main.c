@@ -34,11 +34,13 @@ void LOAD(void);//整个道路情况
 
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
-int sever_range=13;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
+int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
 int sever_duty=0;//舵机占空比变化值
+
 /**驱动电机相关QAQ**/
 float motor1_out,motor2_out;
 int motor_duty=0;//驱动电机占空比变化值
+int motor_duty_error=0;//用于调节两个轮子的PID  大于0向左偏 小于0向右偏
 int motor_range=40;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40
 
 /**电磁传感器相关**/
@@ -47,7 +49,7 @@ int16 Value1_SystemError=0;
 int16 Value2_SystemError=35;
 int error_stack[100];
 unsigned char current_error=0;
-unsigned char error_delay=10;
+unsigned char error_delay=0;
 
 /**道路相关**/
 #define load0_straight 0//直线
@@ -61,8 +63,9 @@ unsigned char error_delay=10;
 #define stop 10   //停止
 unsigned char current_load_state=load0_straight;
 
-
+/**OLED相关**/
 char buff[20];
+
 void  main(void)
 { 
   all_init();  //初始化
@@ -70,42 +73,56 @@ void  main(void)
   DELAY_MS(2000);
   OLED_CLS();
   OLED_P6x8Str(0,0,"DaJaV"); //第0行第0列开始显示
-  OLED_P6x8Str(5*6,0,"QAQ"); //第0行第30列开始显示
+  OLED_P6x8Str(6*6,0,"QAQ"); //第0行第30列开始显示
 
-  OLED_P6x8Str(20,4,"Current_Road=");
-  OLED_P6x8Str(20,5,"motor_duty=");
-  OLED_P6x8Str(20,6,"sever_duty=");
-
+  OLED_P6x8Str(20,2,"Current_Road=");
+  OLED_P6x8Str(20,3,"motor_duty=");
+  OLED_P6x8Str(20,4,"sever_duty=");
+  OLED_P6x8Str(20,5,"Value1= ");
+  OLED_P6x8Str(20,6,"Value2= ");
 
   EnableInterrupts; //打开中断 
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
- 
+       if(BT_YES_IN==0)//BT1 重启按钮
+       {
+          DELAY_MS(10); //延时10ms 消抖
+            if(BT_YES_IN==0){
+                  current_load_state=load0_straight;
+                  current_error=0;
+                  error_delay=0;
+                  sever_duty=0;
+            }  
+       }
 
 
 
       LOAD();
 
 
-
-
-
       motor_duty=motor_duty_Limit(motor_duty);
-      motor1_out=motor_duty*0.01; //转化为实际占空比
-      motor2_out=motor_duty*0.01;  
+      motor1_out=(motor_duty-motor_duty_error)*0.01; //转化为实际占空比
+      motor2_out=(motor_duty+motor_duty_error)*0.01;  
       Motor_Out();//驱动电机控制输出
 
       sever_duty=sever_duty_Limit(sever_duty);
       FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 
-    sprintf(buff,"%d",current_load_state);  //将读数Value1转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+78,4,buff); //将数值显示在液晶屏幕上 13*6
+
+    sprintf(buff,"%d",current_load_state);  //将读数current_load_state转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+78,2,buff); //将数值显示在液晶屏幕上 13*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    sprintf(buff,"%d",motor_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    sprintf(buff,"%d",motor_duty);  //将读数motor_duty转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,3,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+    sprintf(buff,"%d",sever_duty);  //将读数sever_duty转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,4,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+    sprintf(buff,"%d",Value1);  //将读数Value1转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,5,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    sprintf(buff,"%d",sever_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
 
@@ -116,8 +133,10 @@ void  main(void)
 
 void all_init(void)
 {
+button_init();//初始化蜂鸣器
+BEEP_ON;//介意的可以把蜂鸣器关掉 打开打开 一定要打开
 led_init();  //初始化LED
-OLED_Init(); 
+OLED_Init(); //初始化显示屏
 pit_init_ms(PIT0,10); //10ms定时中断 用于传感器获取读数
 set_vector_handler(PIT0_VECTORn ,PIT_IRQHandler);//中断向量表
 
@@ -136,6 +155,7 @@ FTM_PWM_init(FTM0,FTM_CH3,10*1000,0);          // 电机 PWM  PTC4输出，频率为10Kh
 //   FTM_QUAD_Init(FTM1); //初始化正交解码计数通道
    FTM_QUAD_Init(FTM2); //初始化正交解码计数通道
 }
+
 void Motor_Out(void) //电机控制输出函数
 {
   
@@ -201,7 +221,7 @@ void PIT_IRQHandler()  //10ms一次中断
     }
    else
    {
-     error_stack[(current_error+error_delay)%100] =(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;
+     error_stack[(current_error+error_delay)%100] =-((Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5);
      i=0;
    }
 
@@ -216,16 +236,14 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-    motor_duty=30;
-    if (ABS(error_stack[current_error]) >= 200){
-        sever_duty = sever_PID(error_stack[current_error],10/1000.0,0/1000,1.0/1000.0);
+    motor_duty=30;//轮子基本转速 
+    sever_duty=0;//保持舵向不动
+    if (ABS(error_stack[current_error]) >= 200){//放弃舵机pid 采用轮子差速来进行转向调节
+        motor_duty_error= motor_PID(error_stack[current_error],???/1000.0,???/1000,???/1000.0);//两轮转速差值通过pid来获得
     }
-    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
-    else
-    {
-    sever_duty= sever_PID(error_stack[current_error]);
-    }*/
-    current_error=(current_error+1)%100;
+    if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
+    current_error=(current_error+1)%100;//数据更新
+    error_delay=0;//无延时 直接采用当前数据
 break;
 case load1_curve:
     motor_duty=30;

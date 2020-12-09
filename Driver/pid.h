@@ -2,6 +2,6 @@
 #define _PID_H_
 
 
-int sever_PID(int error);
-
+int sever_PID(int error,float kp,float ki,float kd);
+int motor_PID(int error,float kp,float ki,float kd);
 #endif

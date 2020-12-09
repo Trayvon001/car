@@ -30,3 +30,27 @@ int sever_PID(int error,float kp,float ki,float kd)
         ErrorInter = -ErrorInterLimit;
     return sever_duty_return;
 }
+
+int motor_PID(int error,float kp,float ki,float kd)
+{
+    static float Lastsever_Error = 0.0f;
+    static float ErrorInter = 0.0f;
+    const float  ErrorInterLimit = 2000.0f;
+    static uint8_t FirstTimeFlag = TRUE;    // PD第一次标志
+    float Error = error;
+    int motor_duty_return;
+    if(FirstTimeFlag)
+    {
+        motor_duty_return = kp * Error;
+        FirstTimeFlag = FALSE;
+    }
+    else motor_duty_return = kp * Error + ki*ErrorInter + kd * (Error - Lastsever_Error);
+
+    Lastsever_Error = Error;
+    ErrorInter += Error;
+    if(ErrorInter > ErrorInterLimit) 
+        ErrorInter = ErrorInterLimit;
+    else if (ErrorInter < -ErrorInterLimit)
+        ErrorInter = -ErrorInterLimit;
+    return motor_duty_return;
+}

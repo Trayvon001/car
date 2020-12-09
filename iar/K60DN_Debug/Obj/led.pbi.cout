@@ -1,46 +1,46 @@
-"D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Driver\led.c"
+"F:\大三作业\嵌入式作业\car\Driver\led.c"
 -std=c99
 -ferror-limit=100
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\app
+F:\大三作业\嵌入式作业\car\iar\..\app
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\app\inc
+F:\大三作业\嵌入式作业\car\iar\..\app\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Driver
+F:\大三作业\嵌入式作业\car\iar\..\Driver
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\Driver
+F:\大三作业\嵌入式作业\car\iar\..\Lib\Driver
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\Chip\inc
+F:\大三作业\嵌入式作业\car\iar\..\Lib\Chip\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\Chip\inc\IAR
+F:\大三作业\嵌入式作业\car\iar\..\Lib\Chip\inc\IAR
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\Chip\inc\kinetis
+F:\大三作业\嵌入式作业\car\iar\..\Lib\Chip\inc\kinetis
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\CMSIS\inc
+F:\大三作业\嵌入式作业\car\iar\..\Lib\CMSIS\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\iar\..\Lib\Board\inc
+F:\大三作业\嵌入式作业\car\iar\..\Lib\Board\inc
 -I
-D:\Program Files (x86)\IARProg\arm\inc
+E:\IAR\arm\inc
 -I
-D:\Program Files (x86)\IARProg\arm\inc\c
+E:\IAR\arm\inc\c
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\app
+F:\大三作业\嵌入式作业\car\app
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\app\inc
+F:\大三作业\嵌入式作业\car\app\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Driver
+F:\大三作业\嵌入式作业\car\Driver
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\Driver
+F:\大三作业\嵌入式作业\car\Lib\Driver
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\Chip\inc
+F:\大三作业\嵌入式作业\car\Lib\Chip\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\Chip\inc\IAR
+F:\大三作业\嵌入式作业\car\Lib\Chip\inc\IAR
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\Chip\inc\kinetis
+F:\大三作业\嵌入式作业\car\Lib\Chip\inc\kinetis
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\CMSIS\inc
+F:\大三作业\嵌入式作业\car\Lib\CMSIS\inc
 -I
-D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2020-12\DaJaV\Lib\Board\inc
+F:\大三作业\嵌入式作业\car\Lib\Board\inc
 -DDEBUG=1
 -DARM_MATH_CM4=1
 -DMK60DZ10=1
@@ -238,7 +238,7 @@ D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2
 -D__IAR_COMPILERBASE__=594179
 -D_GOANNA=1
 -D__DATE__="Dec  9 2020"
--D__TIME__="08:51:16"
+-D__TIME__="18:33:01"
 -D__STDC__=1
 -D__STDC_VERSION__=199901L
 -D__STDC_HOSTED__=1
@@ -265,8 +265,8 @@ D:\Data storage\微信文档储存\WeChat Files\wxid_8f215ilr7gy722\FileStorage\File\2
 -D__EDG_SYSV=0
 -D__EDG_ANSIC=1
 -D__EDG_CPP11_IL_EXTENSIONS_SUPPORTED=1
--D_DLIB_CONFIG_FILE_HEADER_NAME="D:\Program Files (x86)\IARProg\arm\INC\c\DLib_Config_Full.h"
--D_DLIB_CONFIG_FILE_STRING="D:\\Program Files (x86)\\IARProg\\arm\\INC\\c\\DLib_Config_Full.h"
+-D_DLIB_CONFIG_FILE_HEADER_NAME="E:\IAR\arm\INC\c\DLib_Config_Full.h"
+-D_DLIB_CONFIG_FILE_STRING="E:\\IAR\\arm\\INC\\c\\DLib_Config_Full.h"
 -D__VERSION__="IAR ANSI C/C++ Compiler V7.30.3.8024/W32 for ARM"
 -D_VA_DEFINED=
 -D__CODE_MEMORY_LIST1__()=__CODE_MEM_HELPER1__(__code, 0 )
