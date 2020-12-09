@@ -7,7 +7,7 @@ float sever_KP=10/1000.0 ;
 float sever_KI=0.0/1000 ;
 float sever_KD=1.0/1000;
 
-int sever_PID(int error)
+int sever_PID(int error,float kp,float ki,float kd)
 {
     static float Lastsever_Error = 0.0f;
     static float ErrorInter = 0.0f;
