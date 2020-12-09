@@ -16,10 +16,10 @@ int sever_PID(int error,float kp,float ki,float kd)
     float Error = error;
     int sever_duty_return;
     if(FirstTimeFlag)
-        {
-            sever_duty_return = kp * Error;
-            FirstTimeFlag = FALSE;
-        }
+    {
+        sever_duty_return = kp * Error;
+        FirstTimeFlag = FALSE;
+    }
     else sever_duty_return = kp * Error + ki*ErrorInter + kd * (Error - Lastsever_Error);
 
     Lastsever_Error = Error;
