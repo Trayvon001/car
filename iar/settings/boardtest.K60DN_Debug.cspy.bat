@@ -19,6 +19,6 @@
 @REM 
 
 
-"D:\Program Files (x86)\IARProg\common\bin\cspybat" "D:\Program Files (x86)\IARProg\arm\bin\armproc.dll" "D:\Program Files (x86)\IARProg\arm\bin\armjlink.dll"  %1 --plugin "D:\Program Files (x86)\IARProg\arm\bin\armbat.dll" --device_macro "D:\Program Files (x86)\IARProg\arm\config\debugger\Freescale\Kxx.dmac" --flash_loader "D:\Program Files (x86)\IARProg\arm\config\flashloader\Freescale\FlashK60Dxxx128K.board" --backend -B "--endian=little" "--cpu=Cortex-M4" "--fpu=None" "-p" "D:\Program Files (x86)\IARProg\arm\CONFIG\debugger\Freescale\MK60DN512xxx10.ddf" "--semihosting" "--device=MK60DN512xxx10" "--drv_communication=USB0" "--drv_interface_speed=auto" "--jlink_initial_speed=1000" "--jlink_reset_strategy=0,0" "--drv_interface=SWD" "--drv_catch_exceptions=0x000" "--drv_swo_clock_setup=72000000,0,2000000" 
+"E:\IAR\common\bin\cspybat" "E:\IAR\arm\bin\armproc.dll" "E:\IAR\arm\bin\armjlink.dll"  %1 --plugin "E:\IAR\arm\bin\armbat.dll" --device_macro "E:\IAR\arm\config\debugger\Freescale\Kxx.dmac" --flash_loader "E:\IAR\arm\config\flashloader\Freescale\FlashK60Dxxx128K.board" --backend -B "--endian=little" "--cpu=Cortex-M4" "--fpu=None" "-p" "E:\IAR\arm\CONFIG\debugger\Freescale\MK60DN512xxx10.ddf" "--semihosting" "--device=MK60DN512xxx10" "--drv_communication=USB0" "--drv_interface_speed=auto" "--jlink_initial_speed=1000" "--jlink_reset_strategy=0,0" "--drv_interface=SWD" "--drv_catch_exceptions=0x000" "--drv_swo_clock_setup=72000000,0,2000000" 
 
 

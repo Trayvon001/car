@@ -33,7 +33,7 @@ int sever_duty_Limit(int duty);//防止舵机角度过大
 void LOAD(void);//整个道路情况
 
 /**舵机相关B**/
-int sever_middle=120  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
+int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
 int sever_range=13;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
 int sever_duty=0;//舵机占空比变化值
 /**驱动电机相关QAQ**/
@@ -43,8 +43,8 @@ int motor_range=40;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40
 
 /**电磁传感器相关**/
 int16 Value1,Value2;
-int16 Value1_SystemError=???;
-int16 Value2_SystemError=???;
+int16 Value1_SystemError=0;
+int16 Value2_SystemError=35;
 int error_stack[100];
 unsigned char current_error=0;
 unsigned char error_delay=10;
