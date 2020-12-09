@@ -21,6 +21,7 @@
 oled的基础知识
 我们采用的字符是8*6大小，即一个字符占8行 6列的空间
 OLED一共有64行，但是由于显示一个字符占用8行，所以实际有8行空间可以显示
+DASDASDASD
 *************/
 #include "include.h"
 #include "common.h"
