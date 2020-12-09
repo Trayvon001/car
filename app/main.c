@@ -35,7 +35,7 @@ void LOAD(void);//整个道路情况
 
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
-int sever_range=13;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
+int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
 int sever_duty=0;//舵机占空比变化值
 /**驱动电机相关QAQ**/
 float motor1_out,motor2_out;
@@ -48,7 +48,7 @@ int16 Value1_SystemError=0;
 int16 Value2_SystemError=35;
 int error_stack[100];
 unsigned char current_error=0;
-unsigned char error_delay=10;
+unsigned char error_delay=0;
 
 /**道路相关**/
 #define load0_straight 0//直线
@@ -197,17 +197,17 @@ void PIT_IRQHandler()  //10ms一次中断
     {
       Value1=adc_once(ADC0_DP1,ADC_12bit)-Value1_SystemError;  //获取电感模块的读数
       Value2=adc_once(ADC0_DM1,ADC_12bit)-Value2_SystemError;
-      //if(Value1+Value2<200) current_load_state=stop;//确保安全
-      //else
-      //{
+      if(Value1+Value2<200) current_load_state=stop;//确保安全
+      else
+      {
       Value1_cal[i]=Value1;
       Value2_cal[i]=Value2;
       i++;
-     // }
+     }
     }
    else
    {
-     error_stack[(current_error+error_delay)%100] =-(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;
+     error_stack[(current_error+error_delay)%100] =-((Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5);
      i=0;
    }
 
@@ -222,7 +222,7 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-    motor_duty=20;
+    motor_duty=25;
     /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
     else
     {

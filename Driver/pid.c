@@ -3,9 +3,9 @@
 
 #include "include.h"
 #include "common.h"
-float sever_KP=15/1000.0 ;
+float sever_KP=10/1000.0 ;
 float sever_KI=0.0/1000 ;
-float sever_KD=0.3/1000;
+float sever_KD=1.0/1000;
 
 int sever_PID(int error)
 {
