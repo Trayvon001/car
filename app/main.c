@@ -216,14 +216,14 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-motor_duty=10;
-/*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
-else 
-{
-sever_duty= sever_PID(error_stack[current_error]);
-}*/
-sever_duty= sever_PID(error_stack[current_error]);
-current_error=(current_error+1)%100;
+    motor_duty=10;
+    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
+    else
+    {
+    sever_duty= sever_PID(error_stack[current_error]);
+    }*/
+    sever_duty= sever_PID(error_stack[current_error]);
+    current_error=(current_error+1)%100;
 break;
 case load1_curve:
 
