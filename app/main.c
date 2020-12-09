@@ -227,8 +227,9 @@ case load0_straight:
     current_error=(current_error+1)%100;
 break;
 case load1_curve:
-
-
+    motor_duty=30;
+    sever_duty= sever_PID(error_stack[current_error],10/1000.0,0.0/1000,1.0/1000);
+    current_error=(current_error+1)%100;
 break;
 case load2_roundabout:
 
