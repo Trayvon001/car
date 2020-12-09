@@ -8,6 +8,7 @@
   <component name="ChangeListManager">
     <list default="true" id="091a8c2d-d87f-43fe-b54b-0a4178c473d5" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Driver/pid.c" beforeDir="false" afterPath="$PROJECT_DIR$/Driver/pid.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,7 +43,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1607495973482</updated>
-      <workItem from="1607495975825" duration="4821000" />
+      <workItem from="1607495975825" duration="6032000" />
     </task>
     <task id="LOCAL-00001" summary="上传程序">
       <created>1607496008743</created>
@@ -58,7 +59,14 @@
       <option name="project" value="LOCAL" />
       <updated>1607496588605</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="上传">
+      <created>1607502227617</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1607502227617</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -67,6 +75,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="上传程序" />
     <MESSAGE value="完善" />
-    <option name="LAST_COMMIT_MESSAGE" value="完善" />
+    <MESSAGE value="上传" />
+    <option name="LAST_COMMIT_MESSAGE" value="上传" />
   </component>
 </project>
