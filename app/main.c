@@ -31,7 +31,8 @@ void PIT_IRQHandler();
 int motor_duty_Limit(int duty);//防止速度过大
 int sever_duty_Limit(int duty);//防止舵机角度过大
 void LOAD(void);//整个道路情况
-
+int SIGN(int a); 
+int prv_ABS(int a);
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
 int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
@@ -80,7 +81,7 @@ void  main(void)
   OLED_P6x8Str(20,4,"sever_duty=");
   OLED_P6x8Str(20,5,"Value1= ");
   OLED_P6x8Str(20,6,"Value2= ");
-
+  OLED_P6x8Str(20,7,"C_ERROR= ");
   EnableInterrupts; //打开中断 
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
@@ -102,12 +103,7 @@ void  main(void)
       LOAD();
 
 
-      motor_duty=motor_duty_Limit(motor_duty);
-      motor1_out=(motor_duty-motor_duty_error)*0.01; //转化为实际占空比
-      motor2_out=(motor_duty+motor_duty_error)*0.01;  
-      Motor_Out();//驱动电机控制输出
-      sever_duty=sever_duty_Limit(sever_duty);
-      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+
 
 
     sprintf(buff,"%d",current_load_state);  //将读数current_load_state转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
@@ -125,6 +121,10 @@ void  main(void)
     sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+    
+    sprintf(buff,"%d",error_stack[current_error]);  //将读数V转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
 
       DELAY_MS(90); //延时90ms
     }
@@ -134,11 +134,12 @@ void  main(void)
 void all_init(void)
 {
 button_init();//初始化蜂鸣器
-BEEP_ON;//介意的可以把蜂鸣器关掉 打开打开 一定要打开
-led_init();  //初始化LED
+//BEEP_ON;//介意的可以把蜂鸣器关掉 打开打开 一定要打开
+led_init();  //初始化LED   
 OLED_Init(); //初始化显示屏
 pit_init_ms(PIT0,10); //10ms定时中断 用于传感器获取读数
 set_vector_handler(PIT0_VECTORn ,PIT_IRQHandler);//中断向量表
+
 
 FTM_PWM_init(FTM1,FTM_CH0,100,sever_middle);   //舵机 PWM  PTA12输出，频率为100hz,周期为10ms
 
@@ -188,7 +189,7 @@ void Motor_Out(void) //电机控制输出函数
 int motor_duty_Limit(int duty)//防止速度过大
 {
       if (duty>=motor_range)  //如果超出了范围 占空比限制在40%内，防止输出过大
-      duty=40;
+      duty=motor_range;
       if(duty<=-motor_range)
       duty=-motor_range;
       return duty;
@@ -196,7 +197,7 @@ int motor_duty_Limit(int duty)//防止速度过大
 int sever_duty_Limit(int duty)//防止舵机角度过大
 {
       if (duty>=sever_range)  //如果超出了范围 占空比限制在20%内，防止输出过大
-      duty=sever_range;
+      duty=sever_range+1;
       if(duty<=-sever_range)
       duty=-sever_range;
       return duty;
@@ -225,6 +226,13 @@ void PIT_IRQHandler()  //10ms一次中断
      i=0;
    }
 
+
+      motor_duty=motor_duty_Limit(motor_duty);
+      motor1_out=(motor_duty)*0.01; //转化为实际占空比
+      motor2_out=(motor_duty)*0.01;  
+      Motor_Out();//驱动电机控制输出
+      sever_duty=sever_duty_Limit(sever_duty);
+      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
 }
 
 
@@ -234,23 +242,33 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-    motor_duty=30;//轮子基本转速 
-    sever_duty=0;//保持舵向不动
-    error_delay=0;//无延时 直接采用当前数据
-    if (ABS(error_stack[current_error]) >= 200){//放弃舵机pid 采用轮子差速来进行转向调节
-        motor_duty_error= motor_PID(error_stack[current_error],???/1000.0,???/1000,???/1000.0);//两轮转速差值通过pid来获得
+    //sever_range = 4;//考虑减小舵机占空比来减少其调整的速度，消除直线行驶时的蛇形走线
+    motor_duty=30;//轮子基本转速
+/*    if (ABS(error_stack[current_error]) >= 200){
+        sever_duty = sever_PID(error_stack[current_error],15.0/1000.0,0/1000,1.0/1000.0);//两轮转速差值通过pid来获得
     }
-    if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
-    error_stack[current_error]=0;//用完清零，防止下次循环用到
+    //if(ABS(error_stack[current_error])>1000)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
+*/  
+if(prv_ABS(Value2-Value1)<200) sever_duty=SIGN(Value2-Value1)*2;
+else if(prv_ABS(Value2-Value1)>200&&prv_ABS(Value2-Value1)<400) sever_duty=SIGN(current_error)*4; 
+else if(prv_ABS(Value2-Value1)>400&&prv_ABS(Value2-Value1)<600) sever_duty=SIGN(current_error)*5;
+else sever_duty=SIGN(error_stack[current_error])*8;
+if(prv_ABS(Value2-Value1)>1000) current_load_state=load1_curve;
     current_error=(current_error+1)%100;//数据更新
-    
+    error_stack[current_error]=0;//用完清零，防止下次循环用到
+    error_delay=0;//无延时 直接采用当前数据
 break;
 case load1_curve:
     motor_duty=25;
-    error_delay=???;//延时???个数据 
-    sever_duty= sever_PID(error_stack[current_error],10/1000.0,0.0/1000,1.0/1000);
+if(Value1<200) sever_duty=20;
+else if(Value1>200&&Value1<400) sever_duty=15; 
+else if(Value1>400&&Value1<600) sever_duty=10;
+else sever_duty=5;
+if(prv_ABS(Value2)>3000) current_load_state=stop;
     current_error=(current_error+1)%100;//数据更新
-    if(Value2>???) current_load_state=load2_roundabout;
+    error_stack[current_error]=0;//用完清零，防止下次循环用到
+    error_delay=0;//无延时 直接采用当前数据
+  
 break;
 case load2_roundabout:
 
@@ -268,13 +286,15 @@ case load6_curve:
 
 break;
 case load7_straight://另一中直线行驶的方法
-    sever_duty = 10;//考虑减小舵机占空比来减少其调整的速度，消除直线行驶时的蛇形走线
-    motor_duty=35;//轮子基本转速
-    if (ABS(error_stack[current_error]) >= 400){
-        motor_duty_error = motor_PID(error_stack[current_error],10.0/1000.0,0/1000,1.0/1000.0);//两轮转速差值通过pid来获得
-    }
-    if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
+    motor_duty=30;//轮子基本转速
+
+if(prv_ABS(Value2-Value1)<200) sever_duty=SIGN(Value2-Value1)*2;
+else if(prv_ABS(Value2-Value1)>200&&prv_ABS(Value2-Value1)<400) sever_duty=SIGN(current_error)*4; 
+else if(prv_ABS(Value2-Value1)>400&&prv_ABS(Value2-Value1)<600) sever_duty=SIGN(current_error)*5;
+else sever_duty=SIGN(error_stack[current_error])*8;
+if(prv_ABS(Value2-Value1)>1000) current_load_state=load1_curve;
     current_error=(current_error+1)%100;//数据更新
+    error_stack[current_error]=0;//用完清零，防止下次循环用到
     error_delay=0;//无延时 直接采用当前数据
 break;
 case stop:
@@ -282,4 +302,14 @@ motor_duty=0;
 sever_duty=0;
 break;
 }
+}
+int SIGN(int a){
+  if(a>0) return 1;
+  if(a<0) return -1;
+  return 0;
+}
+int prv_ABS(int a)
+{
+  if(a>0) return a;
+  else return -a;
 }
