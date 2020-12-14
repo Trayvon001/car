@@ -234,7 +234,6 @@ void LOAD(void)
 switch(current_load_state)
 {
 case load0_straight:
-
     motor_duty=30;//轮子基本转速 
     sever_duty=0;//保持舵向不动
     error_delay=0;//无延时 直接采用当前数据
@@ -268,17 +267,15 @@ break;
 case load6_curve:
 
 break;
-case load7_straight:
-    motor_duty=30;
-    if (ABS(error_stack[current_error]) >= 200){
-        sever_duty = sever_PID(error_stack[current_error],8/1000.0,0/1000,1.0/1000.0);
+case load7_straight://另一中直线行驶的方法
+    sever_duty = 10;//考虑减小舵机占空比来减少其调整的速度，消除直线行驶时的蛇形走线
+    motor_duty=35;//轮子基本转速
+    if (ABS(error_stack[current_error]) >= 400){
+        motor_duty_error = motor_PID(error_stack[current_error],10.0/1000.0,0/1000,1.0/1000.0);//两轮转速差值通过pid来获得
     }
-    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;
-    else
-    {
-    sever_duty= sever_PID(error_stack[current_error]);
-    }*/
-    current_error=(current_error+1)%100;
+    if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
+    current_error=(current_error+1)%100;//数据更新
+    error_delay=0;//无延时 直接采用当前数据
 break;
 case stop:
 motor_duty=0;

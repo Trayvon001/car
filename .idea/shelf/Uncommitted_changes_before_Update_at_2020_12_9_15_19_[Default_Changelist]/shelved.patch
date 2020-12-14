@@ -1,0 +1,79 @@
+Index: app/main.c
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/*\r\n * @file       main.c\r\n * @brief      主函数\r\n * @author     lzh\r\n */\r\n/*************\r\n舵机的基础知识：\r\n舵机的控制脉冲宽从0.5ms-2.5ms，分别对应-90度到+90度的位置。\r\n1.5ms 为舵机归0点（置中）。接上摆臂后由于机械安装的偏差，\r\n1.5ms的脉宽可能使摆臂不能回中，\r\n这个时候我们可以通过实验得到使得摆臂回中的脉宽。\r\n**************/\r\n/*************\r\n主板电机驱动的基础知识：\r\n电机驱动信号为PWM，占空比为0-100%，占空比为0 电机停止。占空比为100% 电机满转\r\n驱动电压一定的情况下，控制占空比可以控制转速。\r\n一路电机由2路PWM波控制,假设记为AB两路。当A输出PWM，B不输出（占空比为0）时，电机正转\r\n当B输出PWM，A不输出（占空比为0）时，电机反转\r\n**************/\r\n/*************\r\noled的基础知识\r\n我们采用的字符是8*6大小，即一个字符占8行 6列的空间\r\nOLED一共有64行，但是由于显示一个字符占用8行，所以实际有8行空间可以显示\r\n*************/\r\n#include \"include.h\"\r\n#include \"common.h\"\r\n\r\nvoid all_init(void);//把初始化写在一起\r\nvoid Motor_Out(void);//电机控制输出函数\r\nvoid PIT_IRQHandler();\r\nint motor_duty_Limit(int duty);//防止速度过大\r\nint sever_duty_Limit(int duty);//防止舵机角度过大\r\nvoid LOAD(void);//整个道路情况\r\n\r\n/**舵机相关B**/\r\nint sever_middle=120  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 \r\nint sever_range=13;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）\r\nint sever_duty=0;//舵机占空比变化值\r\n/**驱动电机相关QAQ**/\r\nfloat motor1_out,motor2_out;\r\nint motor_duty=0;//驱动电机占空比变化值\r\nint motor_range=40;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40\r\n\r\n/**电磁传感器相关**/\r\nint16 Value1,Value2;\r\nint16 Value1_SystemError=???;\r\nint16 Value2_SystemError=???;\r\nint error_stack[100];\r\nunsigned char current_error=0;\r\nunsigned char error_delay=10;\r\n\r\n/**道路相关**/\r\n#define load0_straight 0//直线\r\n#define load1_curve 1   //大弯道\r\n#define load2_roundabout 2 //环岛1\r\n#define load3_curve 3      //小弯道\r\n#define load4_roundabout 4 //环岛2\r\n#define load5_curve 5   //小弯道\r\n#define load6_curve 6   //大弯道\r\n#define load7_straight 7   //直线\r\n#define stop 10   //停止\r\nunsigned char current_load_state=load0_straight;\r\n\r\n\r\nchar buff[20];\r\nvoid  main(void)\r\n{ \r\n  all_init();  //初始化\r\n  OLED_Draw_Logo();\r\n  DELAY_MS(2000);\r\n  OLED_CLS();\r\n  OLED_P6x8Str(0,0,\"DaJaV\"); //第0行第0列开始显示\r\n  OLED_P6x8Str(5*6,0,\"QAQ\"); //第0行第30列开始显示\r\n\r\n  OLED_P6x8Str(20,4,\"Current_Road=\");\r\n  OLED_P6x8Str(20,5,\"motor_duty=\");\r\n  OLED_P6x8Str(20,6,\"sever_duty=\");\r\n\r\n\r\n  EnableInterrupts; //打开中断 \r\n  enable_irq (PIT0_IRQn); //使能中断\r\n  while(1) \r\n    {\r\n \r\n\r\n\r\n\r\n      LOAD();\r\n\r\n\r\n\r\n\r\n\r\n      motor_duty=motor_duty_Limit(motor_duty);\r\n      motor1_out=motor_duty*0.01; //转化为实际占空比\r\n      motor2_out=motor_duty*0.01;  \r\n      Motor_Out();//驱动电机控制输出\r\n\r\n      sever_duty=sever_duty_Limit(sever_duty);\r\n      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出\r\n\r\n    sprintf(buff,\"%d\",current_load_state);  //将读数Value1转换为字符串 存在buff 里面 不懂的百度 sprintf 函数\r\n    OLED_P6x8Str(20+78,4,buff); //将数值显示在液晶屏幕上 13*6\r\n    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）\r\n    sprintf(buff,\"%d\",motor_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数\r\n    OLED_P6x8Str(20+66,5,buff); //将数值显示在液晶屏幕上11*6\r\n    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）\r\n    sprintf(buff,\"%d\",sever_duty);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数\r\n    OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6\r\n    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）\r\n\r\n      DELAY_MS(90); //延时90ms\r\n    }\r\n    \r\n}\r\n\r\nvoid all_init(void)\r\n{\r\nled_init();  //初始化LED\r\nOLED_Init(); \r\npit_init_ms(PIT0,10); //10ms定时中断 用于传感器获取读数\r\nset_vector_handler(PIT0_VECTORn ,PIT_IRQHandler);//中断向量表\r\n\r\nFTM_PWM_init(FTM1,FTM_CH0,100,sever_middle);   //舵机 PWM  PTA12输出，频率为100hz,周期为10ms\r\n\r\nFTM_PWM_init(FTM0,FTM_CH0,10*1000,0);          // 电机 PWM  PTC1输出，频率为10Khz、\r\nFTM_PWM_init(FTM0,FTM_CH1,10*1000,0);          // 电机 PWM  PTC2输出，频率为10Khz、\r\nFTM_PWM_init(FTM0,FTM_CH2,10*1000,0);          // 电机 PWM  PTC3输出，频率为10Khz、\r\nFTM_PWM_init(FTM0,FTM_CH3,10*1000,0);          // 电机 PWM  PTC4输出，频率为10Khz、\r\n\r\n   adc_init(ADC0_DP1);  //初始化AD模块\r\n   adc_init(ADC0_DM1);  \r\n   adc_init(ADC1_DP1);  \r\n   adc_init(ADC1_DM1);\r\n\r\n//   FTM_QUAD_Init(FTM1); //初始化正交解码计数通道\r\n   FTM_QUAD_Init(FTM2); //初始化正交解码计数通道\r\n}\r\nvoid Motor_Out(void) //电机控制输出函数\r\n{\r\n  \r\n motor1_out=LIMIT(motor1_out,0.99,-0.99);  //电机的输出值限制在-1~1 之间，-1代表反转最快，1代表正转最快；\r\n motor2_out=LIMIT(motor2_out,0.99,-0.99);\r\n  //电机1\r\n  if(motor1_out>=0) //占空比为正，正转\r\n  {\r\n     FTM_PWM_Duty(FTM0,FTM_CH0,(int)(motor1_out*10000));//占空比精度为10000 ，占空比*占空比精度\r\n     FTM_PWM_Duty(FTM0,FTM_CH2,0);\r\n  }\r\n  else   //为负就反转\r\n  {\r\n     FTM_PWM_Duty(FTM0,FTM_CH0,0);\r\n     FTM_PWM_Duty(FTM0,FTM_CH2,(int)(-motor1_out*10000));\r\n  }\r\n  \r\n  //电机2\r\n    if(motor2_out>=0) //占空比为正，正转\r\n  {\r\n     FTM_PWM_Duty(FTM0,FTM_CH1,(int)(motor2_out*10000)); \r\n     FTM_PWM_Duty(FTM0,FTM_CH3,0);\r\n  }\r\n  else   //反转\r\n  {\r\n     FTM_PWM_Duty(FTM0,FTM_CH1,0);\r\n     FTM_PWM_Duty(FTM0,FTM_CH3,(int)(-motor2_out*10000));\r\n  }\r\n}\r\nint motor_duty_Limit(int duty)//防止速度过大\r\n{\r\n      if (duty>=motor_range)  //如果超出了范围 占空比限制在40%内，防止输出过大\r\n      duty=40;\r\n      if(duty<=-motor_range)\r\n      duty=-motor_range;\r\n      return duty;\r\n}\r\nint sever_duty_Limit(int duty)//防止舵机角度过大\r\n{\r\n      if (duty>=sever_range)  //如果超出了范围 占空比限制在20%内，防止输出过大\r\n      duty=sever_range;\r\n      if(duty<=-sever_range)\r\n      duty=-sever_range;\r\n      return duty;\r\n}\r\n\r\nvoid PIT_IRQHandler()  //10ms一次中断\r\n{\r\n   static unsigned char i=0;\r\n   static int16 Value1_cal[5],Value2_cal[5];\r\n    PIT_Flag_Clear(PIT0);       //清中断标志位\r\n    if(i<5)\r\n    {\r\n      Value1=adc_once(ADC0_DP1,ADC_12bit)-Value1_SystemError;  //获取电感模块的读数\r\n      Value2=adc_once(ADC0_DM1,ADC_12bit)-Value2_SystemError;\r\n      if(Value1+Value2<???) current_load_state=stop;//确保安全\r\n      else\r\n      {\r\n      Value1_cal[i]=Value1;\r\n      Value2_cal[i]=Value2;\r\n      i++;\r\n      }\r\n    }\r\n   else\r\n   {\r\n     error_stack[(current_error+error_delay)%100] =(Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5;\r\n     i=0;\r\n   }\r\n\r\n}\r\n\r\n\r\nvoid LOAD(void)\r\n{\r\n\r\n\r\n\r\nswitch(current_load_state)\r\n{\r\ncase load0_straight:\r\n    motor_duty=10;\r\n    /*if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;\r\n    else\r\n    {\r\n    sever_duty= sever_PID(error_stack[current_error]);\r\n    }*/\r\n    sever_duty= sever_PID(error_stack[current_error]);\r\n    current_error=(current_error+1)%100;\r\nbreak;\r\ncase load1_curve:\r\n\r\n\r\nbreak;\r\ncase load2_roundabout:\r\n\r\nbreak;\r\ncase load3_curve:\r\n\r\nbreak;\r\ncase load4_roundabout:\r\n\r\nbreak;\r\ncase load5_curve:\r\n\r\nbreak;\r\ncase load6_curve:\r\n\r\nbreak;\r\ncase load7_straight:\r\n\r\nbreak;\r\ncase stop:\r\nmotor_duty=0;\r\nsever_duty=0;\r\nbreak;\r\n}\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>GBK
+===================================================================
+diff --git a/app/main.c b/app/main.c
+--- a/app/main.c	(revision 5b024b93592ec1b0e2d87e9551699ad1634bae3e)
++++ b/app/main.c	(date 1607497545873)
+@@ -165,6 +165,7 @@
+      FTM_PWM_Duty(FTM0,FTM_CH3,(int)(-motor2_out*10000));
+   }
+ }
++
+ int motor_duty_Limit(int duty)//防止速度过大
+ {
+       if (duty>=motor_range)  //如果超出了范围 占空比限制在40%内，防止输出过大
+@@ -173,6 +174,7 @@
+       duty=-motor_range;
+       return duty;
+ }
++
+ int sever_duty_Limit(int duty)//防止舵机角度过大
+ {
+       if (duty>=sever_range)  //如果超出了范围 占空比限制在20%内，防止输出过大
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"CMakeSettings\">\r\n    <configurations>\r\n      <configuration PROFILE_NAME=\"Debug\" CONFIG_NAME=\"Debug\" ENABLED=\"true\" />\r\n    </configurations>\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"091a8c2d-d87f-43fe-b54b-0a4178c473d5\" name=\"Default Changelist\" comment=\"\">\r\n      <change beforePath=\"$PROJECT_DIR$/app/main.c\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/main.c\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"ClangdSettings\">\r\n    <option name=\"formatViaClangd\" value=\"false\" />\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"ProjectId\" id=\"1lPPu2AJBIqxHaw7LQYUPJOrA4g\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">\r\n    <property name=\"RunOnceActivity.OpenProjectViewOnStart\" value=\"true\" />\r\n    <property name=\"RunOnceActivity.ShowReadmeOnStart\" value=\"true\" />\r\n    <property name=\"WebServerToolWindowFactoryState\" value=\"false\" />\r\n    <property name=\"cf.first.check.clang-format\" value=\"false\" />\r\n    <property name=\"nodejs_interpreter_path.stuck_in_default_project\" value=\"undefined stuck path\" />\r\n    <property name=\"nodejs_npm_path_reset_for_default_project\" value=\"true\" />\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"091a8c2d-d87f-43fe-b54b-0a4178c473d5\" name=\"Default Changelist\" comment=\"\" />\r\n      <created>1607495973482</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1607495973482</updated>\r\n      <workItem from=\"1607495975825\" duration=\"566000\" />\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"上传程序\">\r\n      <created>1607496008743</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1607496008743</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"2\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"上传程序\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"上传程序\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 5b024b93592ec1b0e2d87e9551699ad1634bae3e)
++++ b/.idea/workspace.xml	(date 1607498312400)
+@@ -7,6 +7,7 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="091a8c2d-d87f-43fe-b54b-0a4178c473d5" name="Default Changelist" comment="">
++      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/app/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.c" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+@@ -41,7 +42,7 @@
+       <option name="number" value="Default" />
+       <option name="presentableId" value="Default" />
+       <updated>1607495973482</updated>
+-      <workItem from="1607495975825" duration="566000" />
++      <workItem from="1607495975825" duration="2335000" />
+     </task>
+     <task id="LOCAL-00001" summary="上传程序">
+       <created>1607496008743</created>
+@@ -50,7 +51,14 @@
+       <option name="project" value="LOCAL" />
+       <updated>1607496008743</updated>
+     </task>
+-    <option name="localTasksCounter" value="2" />
++    <task id="LOCAL-00002" summary="完善">
++      <created>1607496588605</created>
++      <option name="number" value="00002" />
++      <option name="presentableId" value="LOCAL-00002" />
++      <option name="project" value="LOCAL" />
++      <updated>1607496588605</updated>
++    </task>
++    <option name="localTasksCounter" value="3" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+@@ -58,6 +66,7 @@
+   </component>
+   <component name="VcsManagerConfiguration">
+     <MESSAGE value="上传程序" />
+-    <option name="LAST_COMMIT_MESSAGE" value="上传程序" />
++    <MESSAGE value="完善" />
++    <option name="LAST_COMMIT_MESSAGE" value="完善" />
+   </component>
+ </project>
+\ No newline at end of file
