@@ -237,17 +237,21 @@ case load0_straight:
 
     motor_duty=30;//轮子基本转速 
     sever_duty=0;//保持舵向不动
+    error_delay=0;//无延时 直接采用当前数据
     if (ABS(error_stack[current_error]) >= 200){//放弃舵机pid 采用轮子差速来进行转向调节
         motor_duty_error= motor_PID(error_stack[current_error],???/1000.0,???/1000,???/1000.0);//两轮转速差值通过pid来获得
     }
     if(ABS(error_stack[current_error])>???)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
+    error_stack[current_error]=0;//用完清零，防止下次循环用到
     current_error=(current_error+1)%100;//数据更新
-    error_delay=0;//无延时 直接采用当前数据
+    
 break;
 case load1_curve:
-    motor_duty=30;
+    motor_duty=25;
+    error_delay=???;//延时???个数据 
     sever_duty= sever_PID(error_stack[current_error],10/1000.0,0.0/1000,1.0/1000);
-    current_error=(current_error+1)%100;
+    current_error=(current_error+1)%100;//数据更新
+    if(Value2>???) current_load_state=load2_roundabout;
 break;
 case load2_roundabout:
 

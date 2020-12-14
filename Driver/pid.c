@@ -14,7 +14,7 @@ int sever_PID(int error,float kp,float ki,float kd)
     const float  ErrorInterLimit = 2000.0f;
     static uint8_t FirstTimeFlag = TRUE;    // PD第一次标志
     float Error = error;
-    int sever_duty_return;
+    int sever_duty_return;  
     if(FirstTimeFlag)
     {
         sever_duty_return = kp * Error;
