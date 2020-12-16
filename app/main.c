@@ -24,8 +24,8 @@ OLED一共有64行，但是由于显示一个字符占用8行，所以实际有8行空间可以显示
 *************/
 #include "include.h"
 #include "common.h"
-#define N 1  //滑动滤波窗口
-#define n 0 //异常值个数剔除
+#define N 5  //滑动滤波窗口
+#define n 2 //异常值个数剔除
 
 void all_init(void);//把初始化写在一起
 void Motor_Out(void);//电机控制输出函数
@@ -36,7 +36,7 @@ void getBuf();
 void bubbleSort() ;
 void getValue();
 void PID_motor();//电机PID
-
+void PID_servor();//舵机PID
 int SIGN(int a); 
 int prv_ABS(int a);
 
@@ -48,8 +48,20 @@ unsigned char flag_100ms=0;
 
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
-int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
+int sever_range=23;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）22
 int sever_duty=0;//舵机占空比变化值
+//舵机pid
+int16 Kp_servor=8;  //除以1000
+int16 Ki_servor=0;   //除以1000
+int16 Kd_servor=0 ; //除以1000
+int16 errorSer=0;
+int16 errorSer_last=0;
+int16 errorSer_i=0;
+int16 errorSer_d=0;
+float errorSer2=0; //使用差值/和
+int16 errorSer2Show=0;
+//float p_out;
+//float d_out;
 
 /**驱动电机相关QAQ**/
 float motor1_out,motor2_out;
@@ -64,6 +76,9 @@ int16 speed_set=0; 	//速度设定     motor-0.5---speed-1000
 int16 speedmemo=0;  //记录速度值
 int16 distmemo=10000; //记录距离值
 
+#define speedsetz 600 //直道速度600
+#define speedsetw 350 //弯道速度350
+
 //电机pid
 int16 Kp_motor=100; // 除以1000
 int16 Ki_motor=0;   //除以1000
@@ -75,7 +90,7 @@ int16 errorMot_d=0;
 
 /**电磁传感器相关**/
 int16 Value1_SystemError=0;
-int16 Value2_SystemError=35;
+int16 Value2_SystemError=-35;
 int16 value1,value2; //电感值 直接读取
 int16 value11,value12,value13,value14,value15,value16,value17,value18;
 int16 value21,value22,value23,value24,value25,value26,value27,value28;
@@ -94,7 +109,7 @@ char buff[20];
 void  main(void)
 { 
   all_init();  //初始化
-  OLED_Draw_Logo();
+  OLED_Draw_Logo(); 
   DELAY_MS(2000);
   OLED_CLS();
   OLED_P6x8Str(0,0,"DaJaV"); //第0行第0列开始显示
@@ -113,12 +128,16 @@ void  main(void)
 		if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护
 			{
         outload_flag=1;
+        speed_set=0;
+        //sever_duty=sever_middle;
 			}
   if(BT_YES_IN==0)//BT1 重启按钮
        {
           DELAY_MS(10); //延时10ms 消抖
             if(BT_YES_IN==0){
                outload_flag=0;//回到场地
+               speed_set=0;
+               sever_duty=0;
             }  
        }
 if(outload_flag==1){//冲出场外
@@ -126,9 +145,9 @@ if(outload_flag==1){//冲出场外
 			motor1_out=0; //转化为实际占空比
 			motor2_out=0;  
 			Motor_Out();
-      sever_duty=0;
+            sever_duty=0;
 			FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
-}
+} 
 else{
   if(flag_5ms){
           flag_5ms=0;
@@ -138,19 +157,31 @@ else{
           getValue();
           Value_average=(Value1+Value2)/2;
 
+          if(abs(errorSer)>1200)//判断大弯道
+          {
+            speed_set=speedsetw;
+            Kp_servor=11; //弯道p11
+          }
+          else
+          {
+            speed_set=speedsetz;
+            Kp_servor=8; //弯道p 8
+          }
+      // pid 控制一下 duty_servor
+      PID_servor();
+			FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出，在舵机中点附近左右摆动
       }
   if(flag_20ms){//用于电机输出
-          flag_20ms=0;
-        //控制编码器
+      flag_20ms=0;
+      //控制编码器
 			pulse=FTM_QUAD_get(FTM2);	//获取FTM2模块的读数
-			Realspeed=pulse-pulse_last;
+			Realspeed=pulse_last-pulse;//反过来的目的是为了让速度为正
 			pulse_last=pulse;                
       PID_motor();//pid控制一下duty_motor
       motor_duty=motor_duty_Limit(motor_duty);
       motor1_out=(motor_duty)*0.01; //转化为实际占空比
       motor2_out=(motor_duty)*0.01;  
       Motor_Out();//驱动电机控制输出
-
 //      sever_duty=sever_duty_Limit(sever_duty);
 //      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
       }
@@ -168,6 +199,9 @@ else{
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
     sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）    
+    sprintf(buff,"%d",Realspeed);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）    
       }
   }
@@ -231,7 +265,7 @@ void Motor_Out(void) //电机控制输出函数
 }
 void PID_motor()//电机PID
 {
-	  errorMot=speed_set-Realspeed;
+	      errorMot=speed_set-Realspeed;
         if (errorMot<=200 && abs(errorMot)<=20000 )
         {
           errorMot_i+=errorMot;
@@ -240,9 +274,24 @@ void PID_motor()//电机PID
         errorMot_last=errorMot;
         motor_duty=Kp_motor*errorMot+Kd_motor*errorMot_d+Ki_motor*errorMot_i;
         motor_duty/=1000;
-	        //motor_duty=-motor_duty;
 }
-
+//舵机pid调整，全部使用全局变量
+void PID_servor()
+{
+	errorSer=Value1-Value2;
+	errorSer2= (Value1-Value2)*1.0/(Value1+Value2);
+  errorSer2Show=(int16)(errorSer2*4000);
+  errorSer=errorSer2Show;      
+        
+	errorSer_i+=errorSer;
+	errorSer_d=errorSer-errorSer_last;
+	errorSer_last=errorSer;
+//        d_out=Kd_servor*errorSer_d; 
+//        p_out=Kp_servor*errorSer;
+	sever_duty=Kp_servor*errorSer+Kd_servor*errorSer_d+Ki_servor*errorSer_i;
+  sever_duty/=1000;
+	sever_duty=-sever_duty;
+}
 int motor_duty_Limit(int duty)//防止速度过大
 {
       if (duty>=motor_range)  //如果超出了范围 占空比限制在40%内，防止输出过大
@@ -254,7 +303,7 @@ int motor_duty_Limit(int duty)//防止速度过大
 int sever_duty_Limit(int duty)//防止舵机角度过大
 {
       if (duty>=sever_range)  //如果超出了范围 占空比限制在20%内，防止输出过大
-      duty=sever_range+1;
+      duty=sever_range;
       if(duty<=-sever_range)
       duty=-sever_range;
       return duty;
@@ -268,9 +317,6 @@ void PIT_IRQHandler()  //5ms一次中断
     if(time_count%4==0)   flag_20ms=1;
     if(time_count%20==0)  flag_100ms=1;
 }
-
-
-
 
 int SIGN(int a){
   if(a>0) return 1;
@@ -350,5 +396,6 @@ void getValue()
 		}
 	Value1=sum1/(N-2*n);
 	Value2=sum2/(N-2*n);
-  Value2-=Value2_SystemError; //Value2的静差
+  Value1+=Value1_SystemError; //Value1的人为静差
+  Value2+=Value2_SystemError; //Value2的静差
 }
