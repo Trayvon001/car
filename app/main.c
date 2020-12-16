@@ -24,15 +24,28 @@ OLED一共有64行，但是由于显示一个字符占用8行，所以实际有8行空间可以显示
 *************/
 #include "include.h"
 #include "common.h"
+#define N 1  //滑动滤波窗口
+#define n 0 //异常值个数剔除
 
 void all_init(void);//把初始化写在一起
 void Motor_Out(void);//电机控制输出函数
 void PIT_IRQHandler();
 int motor_duty_Limit(int duty);//防止速度过大
 int sever_duty_Limit(int duty);//防止舵机角度过大
-void LOAD(void);//整个道路情况
+void getBuf();
+void bubbleSort() ;
+void getValue();
+void PID_motor();//电机PID
+
 int SIGN(int a); 
 int prv_ABS(int a);
+
+/**定时器相关**/
+int32 time_count=0;
+unsigned char flag_5ms=0;
+unsigned char flag_20ms=0;
+unsigned char flag_100ms=0;
+
 /**舵机相关B**/
 int sever_middle=120;  //舵机摆臂回正的脉宽，需要根据实际情况修改，现在是(155/1000)*10ms=1.55ms 1000是脉冲精度 
 int sever_range=20;    //限制一下舵机摆动的幅度，防止打死造成机械损坏（大约正负25度，根据实际情况修改）
@@ -44,26 +57,37 @@ int motor_duty=0;//驱动电机占空比变化值
 int motor_duty_error=0;//用于调节两个轮子的PID  大于0向左偏 小于0向右偏
 int motor_range=40;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40
 
+int16 pulse=0;		//脉冲数
+int16 pulse_last=0;
+int16 Realspeed=0;		//脉冲差数
+int16 speed_set=0; 	//速度设定     motor-0.5---speed-1000
+int16 speedmemo=0;  //记录速度值
+int16 distmemo=10000; //记录距离值
+
+//电机pid
+int16 Kp_motor=100; // 除以1000
+int16 Ki_motor=0;   //除以1000
+int16 Kd_motor=0; //除以1000
+int16 errorMot=0;
+int16 errorMot_last=0;
+int16 errorMot_i=0;
+int16 errorMot_d=0;
+
 /**电磁传感器相关**/
-int16 Value1,Value2;
 int16 Value1_SystemError=0;
 int16 Value2_SystemError=35;
-int error_stack[100];
-unsigned char current_error=0;
-unsigned char error_delay=0;
+int16 value1,value2; //电感值 直接读取
+int16 value11,value12,value13,value14,value15,value16,value17,value18;
+int16 value21,value22,value23,value24,value25,value26,value27,value28;
+int16 Value1=0,Value2=0;  // 滤波之后的电感值
+int16 value1_buf[N]; 
+int16 value2_buf[N];
+int16 sort1_buf[N];
+int16 sort2_buf[N];
+int16 Value_average;
 
 /**道路相关**/
-#define load0_straight 0//直线
-#define load1_curve 1   //大弯道
-#define load2_roundabout 2 //环岛1
-#define load3_curve 3      //小弯道
-#define load4_roundabout 4 //环岛2
-#define load5_curve 5   //小弯道
-#define load6_curve 6   //大弯道
-#define load7_straight 7   //直线
-#define stop 10   //停止
-unsigned char current_load_state=load0_straight;
-
+unsigned char outload_flag=0;//冲出场外
 /**OLED相关**/
 char buff[20];
 
@@ -86,29 +110,53 @@ void  main(void)
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
-
-       if(BT_YES_IN==0)//BT1 重启按钮
+		if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护
+			{
+        outload_flag=1;
+			}
+  if(BT_YES_IN==0)//BT1 重启按钮
        {
           DELAY_MS(10); //延时10ms 消抖
             if(BT_YES_IN==0){
-                  current_load_state=load0_straight;
-                  current_error=0;
-                  error_delay=0;
-                  sever_duty=0;
+               outload_flag=0;//回到场地
             }  
        }
+if(outload_flag==1){//冲出场外
+	    //电机停转
+			motor1_out=0; //转化为实际占空比
+			motor2_out=0;  
+			Motor_Out();
+      sever_duty=0;
+			FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+}
+else{
+  if(flag_5ms){
+          flag_5ms=0;
+          //滑动滤波
+          getBuf();
+          bubbleSort();
+          getValue();
+          Value_average=(Value1+Value2)/2;
 
+      }
+  if(flag_20ms){//用于电机输出
+          flag_20ms=0;
+        //控制编码器
+			pulse=FTM_QUAD_get(FTM2);	//获取FTM2模块的读数
+			Realspeed=pulse-pulse_last;
+			pulse_last=pulse;                
+      PID_motor();//pid控制一下duty_motor
+      motor_duty=motor_duty_Limit(motor_duty);
+      motor1_out=(motor_duty)*0.01; //转化为实际占空比
+      motor2_out=(motor_duty)*0.01;  
+      Motor_Out();//驱动电机控制输出
 
+//      sever_duty=sever_duty_Limit(sever_duty);
+//      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+      }
+  if(flag_100ms){//用于液晶显示屏刷新
 
-      LOAD();
-
-
-
-
-
-    sprintf(buff,"%d",current_load_state);  //将读数current_load_state转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+78,2,buff); //将数值显示在液晶屏幕上 13*6
-    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
+          flag_100ms=0;
     sprintf(buff,"%d",motor_duty);  //将读数motor_duty转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,3,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
@@ -120,15 +168,10 @@ void  main(void)
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
     sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
-    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-    
-    sprintf(buff,"%d",error_stack[current_error]);  //将读数V转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
-    OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
-    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）
-
-      DELAY_MS(90); //延时90ms
+    OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）    
+      }
+  }
     }
-    
 }
 
 void all_init(void)
@@ -137,7 +180,7 @@ button_init();//初始化蜂鸣器
 //BEEP_ON;//介意的可以把蜂鸣器关掉 打开打开 一定要打开
 led_init();  //初始化LED   
 OLED_Init(); //初始化显示屏
-pit_init_ms(PIT0,10); //10ms定时中断 用于传感器获取读数
+pit_init_ms(PIT0,5); //5ms定时中断 
 set_vector_handler(PIT0_VECTORn ,PIT_IRQHandler);//中断向量表
 
 
@@ -186,6 +229,20 @@ void Motor_Out(void) //电机控制输出函数
      FTM_PWM_Duty(FTM0,FTM_CH3,(int)(-motor2_out*10000));
   }
 }
+void PID_motor()//电机PID
+{
+	  errorMot=speed_set-Realspeed;
+        if (errorMot<=200 && abs(errorMot)<=20000 )
+        {
+          errorMot_i+=errorMot;
+	      }
+        errorMot_d=errorMot-errorMot_last;
+        errorMot_last=errorMot;
+        motor_duty=Kp_motor*errorMot+Kd_motor*errorMot_d+Ki_motor*errorMot_i;
+        motor_duty/=1000;
+	        //motor_duty=-motor_duty;
+}
+
 int motor_duty_Limit(int duty)//防止速度过大
 {
       if (duty>=motor_range)  //如果超出了范围 占空比限制在40%内，防止输出过大
@@ -203,106 +260,18 @@ int sever_duty_Limit(int duty)//防止舵机角度过大
       return duty;
 }
 
-void PIT_IRQHandler()  //10ms一次中断
+void PIT_IRQHandler()  //5ms一次中断
 {
-   static unsigned char i=0;
-   static int16 Value1_cal[5],Value2_cal[5];
     PIT_Flag_Clear(PIT0);       //清中断标志位
-    if(i<5)
-    {
-      Value1=adc_once(ADC0_DP1,ADC_12bit)-Value1_SystemError;  //获取电感模块的读数
-      Value2=adc_once(ADC0_DM1,ADC_12bit)-Value2_SystemError;
-      if(Value1+Value2<200) current_load_state=stop;//确保安全
-      else
-      {
-      Value1_cal[i]=Value1;
-      Value2_cal[i]=Value2;
-      i++;
-      }
-    }
-   else
-   {
-     error_stack[(current_error+error_delay)%100] =-((Value1_cal[0]+Value1_cal[1]+Value1_cal[2]+Value1_cal[3]+Value1_cal[4])/5-(Value2_cal[0]+Value2_cal[1]+Value2_cal[2]+Value2_cal[3]+Value2_cal[4])/5);
-     i=0;
-   }
-
-
-      motor_duty=motor_duty_Limit(motor_duty);
-      motor1_out=(motor_duty)*0.01; //转化为实际占空比
-      motor2_out=(motor_duty)*0.01;  
-      Motor_Out();//驱动电机控制输出
-      sever_duty=sever_duty_Limit(sever_duty);
-      FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+    time_count++;//每5ms加一次，并且不会造成数据溢出
+                          flag_5ms=1;
+    if(time_count%4==0)   flag_20ms=1;
+    if(time_count%20==0)  flag_100ms=1;
 }
 
 
-void LOAD(void)
-{
 
-switch(current_load_state)
-{
-case load0_straight:
-    //sever_range = 4;//考虑减小舵机占空比来减少其调整的速度，消除直线行驶时的蛇形走线
-    motor_duty=30;//轮子基本转速
-/*    if (ABS(error_stack[current_error]) >= 200){
-        sever_duty = sever_PID(error_stack[current_error],15.0/1000.0,0/1000,1.0/1000.0);//两轮转速差值通过pid来获得
-    }
-    //if(ABS(error_stack[current_error])>1000)   current_load_state=load1_curve;//如果两个传感器差太大进入弯道
-*/  
-if(prv_ABS(Value2-Value1)<200) sever_duty=SIGN(Value2-Value1)*2;
-else if(prv_ABS(Value2-Value1)>200&&prv_ABS(Value2-Value1)<400) sever_duty=SIGN(current_error)*4; 
-else if(prv_ABS(Value2-Value1)>400&&prv_ABS(Value2-Value1)<600) sever_duty=SIGN(current_error)*5;
-else sever_duty=SIGN(error_stack[current_error])*8;
-if(prv_ABS(Value2-Value1)>1000) current_load_state=load1_curve;
-    current_error=(current_error+1)%100;//数据更新
-    error_stack[current_error]=0;//用完清零，防止下次循环用到
-    error_delay=0;//无延时 直接采用当前数据
-break;
-case load1_curve:
-    motor_duty=25;
-if(Value1<200) sever_duty=20;
-else if(Value1>200&&Value1<400) sever_duty=15; 
-else if(Value1>400&&Value1<600) sever_duty=10;
-else sever_duty=5;
-if(prv_ABS(Value2)>3000) current_load_state=stop;
-    current_error=(current_error+1)%100;//数据更新
-    error_stack[current_error]=0;//用完清零，防止下次循环用到
-    error_delay=0;//无延时 直接采用当前数据
-  
-break;
-case load2_roundabout:
 
-break;
-case load3_curve:
-
-break;
-case load4_roundabout:
-
-break;
-case load5_curve:
-
-break;
-case load6_curve:
-
-break;
-case load7_straight://另一中直线行驶的方法
-    motor_duty=30;//轮子基本转速
-
-if(prv_ABS(Value2-Value1)<200) sever_duty=SIGN(Value2-Value1)*2;
-else if(prv_ABS(Value2-Value1)>200&&prv_ABS(Value2-Value1)<400) sever_duty=SIGN(current_error)*4; 
-else if(prv_ABS(Value2-Value1)>400&&prv_ABS(Value2-Value1)<600) sever_duty=SIGN(current_error)*5;
-else sever_duty=SIGN(error_stack[current_error])*8;
-if(prv_ABS(Value2-Value1)>1000) current_load_state=load1_curve;
-    current_error=(current_error+1)%100;//数据更新
-    error_stack[current_error]=0;//用完清零，防止下次循环用到
-    error_delay=0;//无延时 直接采用当前数据
-break;
-case stop:
-motor_duty=0;
-sever_duty=0;
-break;
-}
-}
 int SIGN(int a){
   if(a>0) return 1;
   if(a<0) return -1;
@@ -312,4 +281,74 @@ int prv_ABS(int a)
 {
   if(a>0) return a;
   else return -a;
+}
+void getBuf() //建立一个N长的窗口，把数据存储到value*_buf里面
+{ 
+      int16 count; 
+      
+      value1=adc_once(ADC0_DP1,ADC_12bit);  //获取电感模块的读数
+      value2=adc_once(ADC0_DM1,ADC_12bit);  
+
+      for ( count=0;count<N-1;count++) 
+      {
+        value1_buf[count]=value1_buf[count+1];
+      }
+      value1_buf[N-1]=value1;
+      for ( count=0;count<N-1;count++) 
+      {
+        value2_buf[count]=value2_buf[count+1];
+      }
+      value2_buf[N-1]=value2;
+}
+//排序到 sort*_buf里面
+void bubbleSort() 
+{
+	
+    int i, j;
+	int16 temp;
+
+	//复制数组
+	for(i=0; i<N;i++)
+		{
+
+		sort1_buf[i]=value1_buf[i];
+		sort2_buf[i]=value2_buf[i];
+		}
+	//对数组进行排序
+    for (i = 0; i < N - 1; i++)
+		{
+        for (j = 0; j < N - 1 - i; j++)
+        	{
+			if (sort1_buf[j] > sort1_buf[j + 1]) 
+				{
+                temp = sort1_buf[j];
+                sort1_buf[j] = sort1_buf[j + 1];
+                sort1_buf[j + 1] = temp;
+        	    }
+			if (sort2_buf[j] > sort2_buf[j + 1]) 
+				{
+                temp = sort2_buf[j];
+                sort2_buf[j] = sort2_buf[j + 1];
+                sort2_buf[j + 1] = temp;
+        	    }
+			
+		}
+	}
+}
+//去掉N-3个极大，和N-3个极小。剩下地取平均
+void getValue()
+{
+	int64  sum1=0; 
+	int64 sum2=0;
+
+	int i=N;
+	for (i=n;i<N-n;i++)
+		{
+
+		sum1+=sort1_buf[i];
+		sum2+=sort2_buf[i];
+		}
+	Value1=sum1/(N-2*n);
+	Value2=sum2/(N-2*n);
+  Value2-=Value2_SystemError; //Value2的静差
 }
