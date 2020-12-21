@@ -7,8 +7,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="091a8c2d-d87f-43fe-b54b-0a4178c473d5" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_15_19_[Default_Changelist]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_15_19__Default_Changelist_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_21_[Default_Changelist]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_21__Default_Changelist_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_26_[Default_Changelist]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_26__Default_Changelist_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_50_[Default_Changelist]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2020_12_9_16_50__Default_Changelist_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Exe/mydemo.out" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Exe/mydemo.out" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Exe/mydemo.sim" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Exe/mydemo.sim" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd.browse" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/boardtest.pbd.browse" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.o" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/button.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi.cout" beforeDir="false" afterPath="$PROJECT_DIR$/iar/K60DN_Debug/Obj/main.pbi.cout" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/boardtest.dep" beforeDir="false" afterPath="$PROJECT_DIR$/iar/boardtest.dep" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.K60DN_Debug.cspy.bat" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.K60DN_Debug.cspy.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.dbgdt" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.dbgdt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.dni" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.dni" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/iar/settings/boardtest.wsdt" beforeDir="false" afterPath="$PROJECT_DIR$/iar/settings/boardtest.wsdt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,6 +71,7 @@
       <workItem from="1607563398390" duration="196000" />
       <workItem from="1607563611282" duration="52000" />
       <workItem from="1607858159330" duration="942000" />
+      <workItem from="1608512116114" duration="5051000" />
     </task>
     <task id="LOCAL-00001" summary="上传程序">
       <created>1607496008743</created>
