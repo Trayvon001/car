@@ -100,6 +100,7 @@ int16 sort2_buf[N];
 int16 Value_average;
 
 /**道路相关**/
+unsigned char outload_flag=0;//冲出场外
 int time_flag=0;//判定过环岛
 int16 speedmemo=0;  //记录速度值
 int16 distmemo=10000; //记录距离值
@@ -107,8 +108,8 @@ int16 distmemo=10000; //记录距离值
 #define cons2 10085 //距离2
 int32 time1=9999999; //环岛时间戳
 #define bias -17 //环岛进入的偏置-17
-unsigned char huandao_flag=0;//判断是否进入换到标志位
-unsigned char outload_flag=0;//判断是否冲出场外
+unsigned char huandao_flag=0;
+unsigned long out_time=0;
 /**OLED相关**/
 char buff[20];
 
@@ -118,9 +119,9 @@ void  main(void)
   OLED_Draw_Logo(); 
   DELAY_MS(2000);
   OLED_CLS();
-  ////////显示一些需要在显示屏上看到的数据////////////////////
   OLED_P6x8Str(0,0,"DaJaV"); //第0行第0列开始显示
   OLED_P6x8Str(6*6,0,"QAQ"); //第0行第30列开始显示
+
   OLED_P6x8Str(20,2,"Value_ave=");
   OLED_P6x8Str(20,3,"motor_duty=");
   OLED_P6x8Str(20,4,"sever_duty=");
@@ -131,33 +132,33 @@ void  main(void)
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
-      if ((Value1<=2 || Value2<=2)&& Value_average<=20&&outload_flag==0)//安全保护
-      {
-              if((time_count-time1>=1220/5)&&(time_count-time1<=4500/5))//如果是在过第一个环岛发生安全保护，则不予理睬，且有转正的趋势
-              {
-                  motor1_out=0.30; //转化为实际占空比
-                  motor2_out=0.30;  
-                  Motor_Out();//驱动电机控制输出
-                  sever_duty=-20;
-                  FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
-              }
-            else{//如果不是启动安全保护
-                  if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护 
-                        outload_flag=1;
-                }
-      }
-      if(BT_YES_IN==0)//BT1 重启按钮
+	if ((Value1<=2 || Value2<=2)&& Value_average<=20&&outload_flag==0)//安全保护
+	{
+          if((time_count-time1>=220/5)&&(time_count-time1<=4500/5)) 
           {
-              DELAY_MS(10); //延时10ms 消抖
-                if(BT_YES_IN==0){
-                  outload_flag=0;//回到场地
-                  speed_set=0;
-                  sever_duty=0;
-                  time_count=0;
-                }  
+       motor1_out=0.30; //转化为实际占空比
+       motor2_out=0.30;  
+        Motor_Out();//驱动电机控制输出
+        sever_duty=-20;
+        FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
           }
-    if(outload_flag==1)//冲出场外 立刻停止
-    {
+        else{
+        if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护 
+          outload_flag=1;
+	}
+        }
+  if(BT_YES_IN==0)//BT1 重启按钮
+       {
+          DELAY_MS(10); //延时10ms 消抖
+            if(BT_YES_IN==0){
+               outload_flag=0;//回到场地
+               speed_set=0;
+               sever_duty=0;
+               time_count=0;
+               out_time=0;
+            }  
+       }
+    if(outload_flag==1){//冲出场外
         motor1_out=0; //转化为实际占空比
         motor2_out=0;  
         Motor_Out();//驱动电机控制输出
@@ -167,7 +168,7 @@ void  main(void)
     else{
         if(flag_5ms){
           flag_5ms=0;
-          //滑动滤波 传感器的值在此刷新
+          //滑动滤波
           getBuf();
           bubbleSort();
           getValue();
@@ -178,14 +179,15 @@ void  main(void)
                 Kp_servor=12; //弯道p11
               }
               else{//小弯道
-                if((time_count-time1>=1220/5)&&(time_count-time1<=4500/5)) {//过第一个环岛
+                if((time_count-time1>=1220/5)&&(time_count-time1<=4500/5)) {
                   speed_set=300;//300
                   Kp_servor=12; //弯道p11
                 }
-               else if((time_count-time1>=6000/5)&&(time_count-time1<=11000/5)) {//过第二个环岛
+               else if((time_count-time1>=6000/5)&&(time_count-time1<=11000/5)) {
                   speed_set=500;//300
                   Kp_servor=8; //弯道p11
                 }               
+                
                 else{
                 speed_set=600;
                 Kp_servor=8; //弯道p 8
@@ -198,41 +200,43 @@ void  main(void)
             {
                 time_flag++;
             }
-            if (time_flag>=1 &&time_flag<=3)  //给个小范围，防止漏判断
+            if (time_flag>=1 &&time_flag<=1)  //给个小范围，防止漏判断
             {
                 time1=time_count;  //存下时间戳
                 speedmemo=speed_set; //存下速度
                 distmemo=pulse;
                 huandao_flag=1;
+/*                motor1_out=0; //转化为实际占空比
+                motor2_out=0;
+                Motor_Out();
+                sever_duty=0;
+        FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+        while(1);*/
             }//&&((time_count-time1>=0)  &&(time_count-time1<=4000/5)  ((distmemo-pulse>=cons1) && (distmemo-pulse<=cons2))&&(time_count-time1<=500/5)
             
-            if ((huandao_flag==1)&&(time_count-time1>=300/5)&&(time_count-time1<=800/5))//这个时间还要调整 进入环岛直接写死
+            if (huandao_flag==1&&(time_count-time1>=300/5))    //这个时间还要调整  设
             {
-                speed_set=300;
                 sever_duty=bias; //直接给舵机偏转
-                FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+                speed_set=300;
+                 Motor_Out();
+                 FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+                 DELAY_MS(500);
+                 huandao_flag=0;
             }
-            else //没进环岛PID控制舵机
-            {
-            PID_servor();// pid 控制一下 duty_servor
-            sever_duty=sever_duty_Limit(sever_duty);
-            FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出，在舵机中点附近左右摆动
-            }
-            
-            if((huandao_flag==1)&&(time_count-time1>=750/5)) huandao_flag=0; //出环岛把标志位清零
-
-
             //判断第二次环岛
             if(Value_average>=3500&&(time_count-time1>=10000/5)   )   //大于72s，从环岛出来了已经
             {
-                motor1_out=0; //转化为实际占空比
-                motor2_out=0;
-                sever_duty=0;
-                Motor_Out();
-                FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
-                while(1);
+            motor1_out=0; //转化为实际占空比
+            motor2_out=0;
+            sever_duty=0;
+            Motor_Out();
+            FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+            while(1);
             }
-
+      // pid 控制一下 duty_servor
+              PID_servor();
+              sever_duty=sever_duty_Limit(sever_duty);
+              FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出，在舵机中点附近左右摆动
         }
         
   if(flag_20ms){//用于电机输出
@@ -267,7 +271,7 @@ void  main(void)
     sprintf(buff,"%d",Value2);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,6,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）    
-    sprintf(buff,"%d",errorSer2);  //将读数errorSer2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
+    sprintf(buff,"%d",out_time);  //将读数Value2转换为字符串 存在buff 里面 不懂的百度 sprintf 函数
     OLED_P6x8Str(20+66,7,buff); //将数值显示在液晶屏幕上11*6
     OLED_P6x8Char(' ');         //末尾放个空格防止显示错误（末尾不刷新）    
       }
@@ -298,7 +302,7 @@ FTM_PWM_init(FTM0,FTM_CH3,10*1000,0);          // 电机 PWM  PTC4输出，频率为10Kh
    adc_init(ADC1_DP1);  
    adc_init(ADC1_DM1);
 
-// FTM_QUAD_Init(FTM1); //初始化正交解码计数通道
+//   FTM_QUAD_Init(FTM1); //初始化正交解码计数通道
    FTM_QUAD_Init(FTM2); //初始化正交解码计数通道
 }
 
