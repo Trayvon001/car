@@ -67,7 +67,7 @@ int16 errorSer2Show=0;
 float motor1_out,motor2_out;
 int motor_duty=0;//驱动电机占空比变化值
 int motor_duty_error=0;//用于调节两个轮子的PID  大于0向左偏 小于0向右偏
-int motor_range=40;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40
+int motor_range=50;//驱动电机占空比限制在40%内，防止输出过大 也就是0~40
 
 int16 pulse=0;		//脉冲数
 int16 pulse_last=0;
@@ -88,7 +88,7 @@ int16 errorMot_d=0;
 
 /**电磁传感器相关**/
 int16 Value1_SystemError=0;
-int16 Value2_SystemError=-35;
+int16 Value2_SystemError=-40;
 int16 value1,value2; //电感值 直接读取
 int16 value11,value12,value13,value14,value15,value16,value17,value18;
 int16 value21,value22,value23,value24,value25,value26,value27,value28;
@@ -131,20 +131,40 @@ void  main(void)
   enable_irq (PIT0_IRQn); //使能中断
   while(1) 
     {
-      if ((Value1<=2 || Value2<=2)&& Value_average<=20&&outload_flag==0)//安全保护
+      if (Value2<=10&&outload_flag==0)//安全保护
       {
-              if((time_count-time1>=1220/5)&&(time_count-time1<=4500/5))//如果是在过第一个环岛发生安全保护，则不予理睬，且有转正的趋势
+/*              if((time_count-time1>=1220/5)&&(time_count-time1<=5500/5))//如果是在过第一个环岛发生安全保护，则不予理睬，且有转正的趋势
               {
                   motor1_out=0.30; //转化为实际占空比
                   motor2_out=0.30;  
                   Motor_Out();//驱动电机控制输出
                   sever_duty=-20;
                   FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+                  DELAY_MS(100);
+                  
               }
-            else{//如果不是启动安全保护
-                  if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护 
-                        outload_flag=1;
-                }
+              if((time_count-time1>=4500/5)&&(time_count-time1<=11500/5))//如果是在过第一个环岛发生安全保护，则不予理睬，且有转正的趋势
+              {
+                  motor1_out=0.30; //转化为实际占空比
+                  motor2_out=0.30;  
+                  Motor_Out();//驱动电机控制输出
+                  sever_duty=-20;
+                  FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+              }*/
+//            else{//如果不是启动安全保护
+//                  if ((Value1<=2 || Value2<=2)&& Value_average<=20)//安全保护 
+//                        outload_flag=1;
+//                }
+/*                   motor1_out=0.30; //转化为实际占空比
+                  motor2_out=0.30;  
+                  Motor_Out();//驱动电机控制输出
+                  sever_duty=-20;
+                  FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出*/
+        outload_flag=1;
+      }
+      else
+      {
+        outload_flag=0;
       }
       if(BT_YES_IN==0)//BT1 重启按钮
           {
@@ -158,11 +178,16 @@ void  main(void)
           }
     if(outload_flag==1)//冲出场外 立刻停止
     {
-        motor1_out=0; //转化为实际占空比
+/*        motor1_out=0; //转化为实际占空比
         motor2_out=0;  
         Motor_Out();//驱动电机控制输出
         sever_duty=0;
-        FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
+        FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出*/
+                  motor1_out=0.40; //转化为实际占空比
+                  motor2_out=0.40;  
+                  Motor_Out();//驱动电机控制输出
+                  sever_duty=-20;
+                  FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
     }
     else{
         if(flag_5ms){
@@ -172,26 +197,31 @@ void  main(void)
           bubbleSort();
           getValue();
           Value_average=(Value1+Value2)/2;
-              if(abs(errorSer)>1200)//判断大弯道
+              if(abs(errorSer)>1300)//判断大弯道1200
               {
-                speed_set=350;
-                Kp_servor=12; //弯道p11
+                speed_set=600;
+                Kp_servor=13; //弯道p11
               }
               else{//小弯道
-                if((time_count-time1>=1220/5)&&(time_count-time1<=4500/5)) {//过第一个环岛
-                  speed_set=300;//300
+                if((time_count-time1>=1050/5)&&(time_count-time1<=4000/5)) {//过第一个环岛
+                  speed_set=350;//300
                   Kp_servor=12; //弯道p11
                 }
-               else if((time_count-time1>=6000/5)&&(time_count-time1<=11000/5)) {//过第二个环岛
-                  speed_set=500;//300
-                  Kp_servor=8; //弯道p11
-                }               
+               else if((time_count-time1>=4500/5)&&(time_count-time1<=9000/5)) {//过第二个环岛
+                  speed_set=550;//300
+                  Kp_servor=12; //弯道p11
+                }
+                else if((time_count-time1>=10000/5))
+                {
+                speed_set=800;
+                Kp_servor=9; //弯道p 8
+                }
                 else{
-                speed_set=600;
+                speed_set=650;
                 Kp_servor=8; //弯道p 8
                 }
                 
-              }  
+              }
               
             //判断环岛
             if(Value_average>=3500)
@@ -206,9 +236,9 @@ void  main(void)
                 huandao_flag=1;
             }//&&((time_count-time1>=0)  &&(time_count-time1<=4000/5)  ((distmemo-pulse>=cons1) && (distmemo-pulse<=cons2))&&(time_count-time1<=500/5)
             
-            if ((huandao_flag==1)&&(time_count-time1>=300/5)&&(time_count-time1<=800/5))//这个时间还要调整 进入环岛直接写死
+            if ((huandao_flag==1)&&(time_count-time1>=400/5)&&(time_count-time1<=1100/5))//这个时间还要调整 进入环岛直接写死
             {
-                speed_set=300;
+                speed_set=350;
                 sever_duty=bias; //直接给舵机偏转
                 FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出
             }
@@ -216,10 +246,14 @@ void  main(void)
             {
             PID_servor();// pid 控制一下 duty_servor
             sever_duty=sever_duty_Limit(sever_duty);
+            if((time_count-time1>=1800/5)&&(time_count-time1<=2800/5))//环岛时间
+            {
+              if(sever_duty>-10) sever_duty=-10;
+            }
             FTM_PWM_Duty(FTM1,FTM_CH0,sever_middle+sever_duty);    //舵机控制输出，在舵机中点附近左右摆动
             }
             
-            if((huandao_flag==1)&&(time_count-time1>=750/5)) huandao_flag=0; //出环岛把标志位清零
+            if((huandao_flag==1)&&(time_count-time1>=1100/5)) huandao_flag=0; //出环岛把标志位清零
 
 
             //判断第二次环岛
